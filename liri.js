@@ -4,7 +4,8 @@ var accessKeys = require("./keys.js");
 // stores the needed information
 var twitterKeys = accessKeys.twitterKeys;
 
-var omdbKey = accessKeys.ombdKey;
+var omdbKey = accessKeys.omdbKey.api_key;
+
 
 // ******* GET PACKAGES *******
 var Twitter = require('twitter'); // imports the twitter package
@@ -24,6 +25,8 @@ var fs = require('fs');
 var action = process.argv[2];
 
 var searchTitle = "";
+
+var queryUrl = "";
 
 var nodeArgs = process.argv;
 
@@ -61,7 +64,7 @@ switch (action) {
 	  	var album = response.tracks.items[0].album.name;
 	  	var preview = response.tracks.items[0].external_urls.spotify;
 
-	  	console.log("Artist(s): " + artists + "\nSong Title: " + song + "\nAlbum: " + album + "\nListen: " + preview );
+	  	console.log("\nArtist(s): " + artists + "\nSong Title: " + song + "\nAlbum: " + album + "\nListen: " + preview );
 	  	
 	    
 	  })
@@ -75,6 +78,56 @@ switch (action) {
 	// country where produced, language of the movie, plot, actors
 	// if no movie is entered, default to "Mr. Nobody"
 	case 'movie-this':
+
+	if (nodeArgs.length>3){
+		for (var i = 3; i < nodeArgs.length; i++) {
+
+		  if (i > 3 && i < nodeArgs.length) {
+
+		    searchTitle = searchTitle + "+" + nodeArgs[i];
+
+		  }
+
+		  else {
+
+		    searchTitle += nodeArgs[i];
+
+		  }
+		}
+	}
+
+	else {
+
+		searchTitle = "Mr Nobody";
+	}
+
+
+	queryUrl = "http://www.omdbapi.com/?t=" + searchTitle + "&y=&plot=short&apikey=" + omdbKey;
+
+
+	request(queryUrl, function(error, response, body) {
+
+  		// If the request is successful
+  		if (!error && response.statusCode === 200) {
+
+  			// console.log(response);
+
+  			var movieTitle = JSON.parse(body).Title;
+  			var releaseYear = JSON.parse(body).Year;
+  			var imdbRating = JSON.parse(body).Ratings[0].Value;
+  			var rottenRating = JSON.parse(body).Ratings[1].Value;
+  			var country = JSON.parse(body).Country;
+  			var language = JSON.parse(body).Language;
+  			var plot = JSON.parse(body).Plot;
+  			var actors = JSON.parse(body).Actors;
+
+    		// Parse the body of the site and recover just the imdbRating
+    		// (Note: The syntax below for parsing isn't obvious. Just spend a few moments dissecting it).
+    		console.log("\nTitle: " + movieTitle + "\nRelease Year: " + releaseYear + "\nIMDB Rating: " + imdbRating + "\nRotten Tomatoes: " + rottenRating 
+    			+ "\nProduction Country: " + country + "\nLanguage: " + language + "\nPlot: " + plot + "\nActors: " + actors);
+  		}
+  	});
+
 	break;
 
 	// uses fs command to read 'random.txt' and execute one of LIRI's commands
@@ -90,21 +143,7 @@ switch (action) {
 	})
 	break;
 
-	
-	// console.log("Invalid command. Try again.");
+	default:
+	console.log("\nInvalid command. Try again.");
+	break;
 }
-
-// ******* FUNCTIONS *******
-
-// function spotifyThis(title){
-
-// 	spotify.search({ type: 'track', query: title }, function(err, data) {
-// 	  if (err) {
-// 	    return console.log('Error occurred: ' + err);
-// 	  }
-	 
-// 		console.log(data); 
-// 	});
-// }
-
-	
