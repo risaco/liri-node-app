@@ -1,3 +1,5 @@
+// LIRI accepts the following commands: my-tweets; spotify-this-song; movie-this; do-what-it-says
+
 // imports the file needed to access the keys
 var accessKeys = require("./keys.js");
 
@@ -9,6 +11,8 @@ var omdbKey = accessKeys.omdbKey.api_key;
 
 // ******* GET PACKAGES *******
 var Twitter = require('twitter'); // imports the twitter package
+
+var twitter = new Twitter(twitterKeys);
 
 var Spotify = require('node-spotify-api'); // imports the spotify package
 
@@ -35,6 +39,24 @@ switch (action) {
 
 	// display last 20 tweets and when they were created
 	case 'my-tweets':
+	var params = { screen_name: 'BrunoMars', count: 20 };
+
+	twitter.get('statuses/user_timeline', params, function(error, tweets, response) {
+
+	    if (!error) {
+	      var data = []; //empty array to hold data
+	      for (var i = 0; i < tweets.length; i++) {
+	        data.push({
+	            Created: tweets[i].created_at,
+	            Tweets: tweets[i].text,
+	        });
+	      }
+	      console.log(data);
+	      // writeToLog(data);
+	    }
+	});
+	
+
 	break;
 
 	// takes the song provided and displays artist(s), song name, preview link of song, album of song
@@ -42,20 +64,13 @@ switch (action) {
 	case 'spotify-this-song':
 
 	// capture all of the arguments after "spotify-this-song" and put them together
-	for (var i = 3; i < nodeArgs.length; i++) {
+	if (nodeArgs.length>3){
 
-	  if (i > 3 && i < nodeArgs.length) {
-
-	    searchTitle = searchTitle + "+" + nodeArgs[i];
-
-	  }
-
-	  else {
-
-	    searchTitle += nodeArgs[i];
-
-	  }
+		createSearch();
+		
 	}
+
+	else { searchTitle = "the sign ace of"; }
 
 	spotify.search({ type: 'track', query: searchTitle, limit:1 })
 	  .then(function(response) {
@@ -65,14 +80,13 @@ switch (action) {
 	  	var preview = response.tracks.items[0].external_urls.spotify;
 
 	  	console.log("\nArtist(s): " + artists + "\nSong Title: " + song + "\nAlbum: " + album + "\nListen: " + preview );
-	  	
 	    
 	  })
 	  .catch(function(err) {
 	    console.log(err);
-	  });
+	});
 
-		break;
+	break;
 
 	// takes movie title and displays movie title, year it came out, imdb rating, rotten tomatoes rating,
 	// country where produced, language of the movie, plot, actors
@@ -80,26 +94,12 @@ switch (action) {
 	case 'movie-this':
 
 	if (nodeArgs.length>3){
-		for (var i = 3; i < nodeArgs.length; i++) {
 
-		  if (i > 3 && i < nodeArgs.length) {
-
-		    searchTitle = searchTitle + "+" + nodeArgs[i];
-
-		  }
-
-		  else {
-
-		    searchTitle += nodeArgs[i];
-
-		  }
-		}
+		createSearch();
+		
 	}
 
-	else {
-
-		searchTitle = "Mr Nobody";
-	}
+	else { searchTitle = "Mr Nobody"; }
 
 
 	queryUrl = "http://www.omdbapi.com/?t=" + searchTitle + "&y=&plot=short&apikey=" + omdbKey;
@@ -146,4 +146,17 @@ switch (action) {
 	default:
 	console.log("\nInvalid command. Try again.");
 	break;
+}
+
+// ***** FUNCTIONS *****
+
+function createSearch() {
+	for (var i = 3; i < nodeArgs.length; i++) {
+
+		  if (i > 3 && i < nodeArgs.length) {
+		    searchTitle = searchTitle + "+" + nodeArgs[i];
+		  }
+
+		  else { searchTitle += nodeArgs[i]; }
+		}
 }
